@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+//table for all our individual products
+model Product {
+  id String @id @default(uuid())
+  name              String             //name of the product
+  priceInCents      Int                //price of the product in cents
+  filePath          String             //path of the product image
+  description       String             //description of the product
+  isAvailable       Boolean            @default(true) //is the product available for purchase
+  createdAt         DateTime           @default(now()) //is the product available or not
+  updatedAt         DateTime           @updatedAt 
+  oreders           Order[]            //each product can have multuiple orders
+  donwloadVerifications DownloadVerification[] //each product can have multuiple download verifications
+}
+
+//table for each of our costumers
+model User {
+  id String @id @default(uuid())
+  email String @unique
+  createdAt         DateTime           @default(now()) //is the product available or not
+  updatedAt         DateTime           @updatedAt
+  orders            Order[]            //each user can have multuiple orders
+}
+
+//table for evry oreder that individual costumers make | linking up our product and user
+model Order {
+  id                String             @id @default(uuid())
+  priceInCents      Int                //we want to track the price of the order becouse in the future it can change
+  createdAt         DateTime           @default(now()) //is the product available or not
+  updatedAt         DateTime           @updatedAt 
+
+  userId            String             //user who made the order
+  productId         String             //product that was ordered
+  user              User               @relation(fields: [userId], references: [id], onDelete: Restrict) //if we try to delete a user when we have orders, it will not allow use to delete
+  product           Product            @relation(fields: [productId], references: [id], onDelete: Restrict) //if we try to delete a product when we have orders, it will not allow use to delete
+}
+
+//table for createing links that allow us to download individual products
+model DownloadVerification {
+  id                String             @id @default(uuid())
+  expiresAt         DateTime           //when the download link expires
+  createdAt         DateTime           @default(now()) //is the product available or not
+  productId         String             //product that was ordered
+  product           Product            @relation(fields: [productId], references: [id], onDelete: Cascade) //if delete a product delete all downloads links
+
+}
